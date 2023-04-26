@@ -5,66 +5,48 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mbaptist <mbaptist@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/26 17:20:12 by mbaptist          #+#    #+#             */
-/*   Updated: 2023/04/26 17:28:31 by mbaptist         ###   ########.fr       */
+/*   Created: 2023/04/26 17:13:27 by mbaptist          #+#    #+#             */
+/*   Updated: 2023/04/26 17:13:28 by mbaptist         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char	*ft_write(char *buff)
-{
-	int		i;
-	char	*str;
-
-	i = 0;
-	if (!buff[i])
-		return (NULL);
-	while (buff[i] && buff[i] != '\n')
-		i++;
-	str = ft_strnew(i);
-	if (!str)
-		return (NULL);
-	i = 0;
-	while (buff[i] && buff[i] != '\n')
-	{
-		str[i] = buff[i];
-		i++;
-	}
-	return (str);
-}
-
-char	*ft_next(char *buff)
-{
-	int		i;
-	char	*str;
-
-	i = 0;
-	if (!buff[i])
-		return (NULL);
-	while (buff[i] && buff[i] != '\n')
-		i++;
-	if (buff[i] == '\n')
-		i++;
-	str = ft_strdup(buff + i);
-	return (str);
-}
-
 char	*get_next_line(int fd)
 {
-	static char	*buff = NULL;
+	static char	*buffer;
 	char		*line;
 	char		*temp;
-	int			n_bytes;
+	int			bytes_rd;
 
 	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
 		return (NULL);
-	buff = read(fd, buff);
-	if (!buff)
-		return (NULL);
-	line = ft_write(buff);
-	temp = buff;
-	buff = ft_next(buff);
+	line = ft_strdup("");
+	temp = ft_strdup("");
+	bytes_rd = 1;
+	while (bytes_rd > 0 && !ft_strchr(buffer, '\n'))
+	{
+		bytes_rd = read(fd, temp, BUFFER_SIZE);
+		if (bytes_rd == -1)
+			return (NULL);
+		temp[bytes_rd] = '\0';
+		buffer = ft_strjoin(buffer, temp);
+	}
 	free(temp);
+	if (ft_strchr(buffer, '\n'))
+	{
+		line = ft_strsub(buffer, 0, ft_strchr(buffer, '\n') - buffer);
+		temp = ft_strdup(buffer);
+		free(buffer);
+		buffer = ft_strsub(temp, ft_strchr(temp, '\n') - temp + 1,
+				ft_strlen(temp));
+		free(temp);
+	}
+	else
+	{
+		line = ft_strdup(buffer);
+		free(buffer);
+		buffer = NULL;
+	}
 	return (line);
 }
